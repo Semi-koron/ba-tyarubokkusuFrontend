@@ -1,59 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
 
 const HandTrackingComponent = () => {
   const [webcamRunning, setWebcamRunning] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const handLandmarkerRef = useRef<HandLandmarker | undefined>(undefined);
-  useEffect(() => {
-    const arCamera = document.getElementById("arjs-video") as HTMLVideoElement;
-    videoRef.current = arCamera;
-    console.log("videoRef", arCamera);
-  }, []);
-  useEffect(() => {
-    const arCamera = document.getElementById("arjs-video") as HTMLVideoElement;
-    videoRef.current = arCamera;
-    console.log("videoRef", arCamera);
-    const enableCam = () => {
-      if (!handLandmarkerRef.current) {
-        console.log("まだ映像が読み込めてないよ");
-        return;
-      } else {
-        console.log("映像読み込み完了", handLandmarkerRef);
-      }
-
-      navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.addEventListener("loadeddata", predictWebcam);
-        }
-      });
-    };
-
-    const createHandLandmarker = async () => {
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-      );
-      handLandmarkerRef.current = await HandLandmarker.createFromOptions(
-        vision,
-        {
-          baseOptions: {
-            modelAssetPath:
-              "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-            delegate: "GPU",
-          },
-          runningMode: "VIDEO",
-          numHands: 2,
-        }
-      );
-      setWebcamRunning(true);
-      enableCam();
-    };
-
-    createHandLandmarker();
-  }, []);
-
-  const predictWebcam = async () => {
+  const predictWebcam = useCallback(async () => {
     console.log("predictWebcam");
     const video = videoRef.current;
     if (!video) return;
@@ -143,17 +95,92 @@ const HandTrackingComponent = () => {
     };
 
     processFrame();
-  };
+  }, [webcamRunning, videoRef, handLandmarkerRef]);
+  // useEffect(() => {
+  //   const arCamera = document.getElementById("arjs-video") as HTMLVideoElement;
+  //   videoRef.current = arCamera;
+  //   console.log("videoRef", arCamera);
+  // }, [predictWebcam]);
+  useEffect(() => {
+    const targetNode = document.documentElement;
+
+    // MutationObserverのコールバック関数を定義
+    const callback = function (mutationsList, observer) {
+      for (let mutation of mutationsList) {
+        if (mutation.type === "childList") {
+          for (let node of mutation.addedNodes) {
+            if (node.id === "arjs-video") {
+              console.log('Element with id "hoge" has been added.');
+              // ここに対象要素が追加された際の処理を記述する
+              const arCamera = document.getElementById(
+                "arjs-video"
+              ) as HTMLVideoElement;
+              videoRef.current = arCamera;
+              console.log("videoRef", arCamera);
+            }
+          }
+        }
+      }
+    };
+
+    // MutationObserverのオプションを設定
+    const config = { childList: true, subtree: true };
+
+    // MutationObserverをインスタンス化し、監視を開始
+    const observer = new MutationObserver(callback);
+    observer.observe(targetNode, config);
+
+    const arCamera = document.getElementById("arjs-video") as HTMLVideoElement;
+    videoRef.current = arCamera;
+    console.log("videoRef", arCamera);
+    const enableCam = () => {
+      if (!handLandmarkerRef.current) {
+        console.log("まだ映像が読み込めてないよ");
+        return;
+      } else {
+        console.log("映像読み込み完了", handLandmarkerRef);
+      }
+
+      navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.addEventListener("loadeddata", predictWebcam);
+        }
+      });
+    };
+
+    const createHandLandmarker = async () => {
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+      );
+      handLandmarkerRef.current = await HandLandmarker.createFromOptions(
+        vision,
+        {
+          baseOptions: {
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+            delegate: "GPU",
+          },
+          runningMode: "VIDEO",
+          numHands: 2,
+        }
+      );
+      setWebcamRunning(true);
+      enableCam();
+    };
+
+    createHandLandmarker();
+  }, [predictWebcam]);
 
   return (
     <div>
-      {/* <video
+      <video
         ref={videoRef}
         id="video"
         style={{ display: "none" }}
         autoPlay
         muted
-      ></video> */}
+      ></video>
     </div>
   );
 };

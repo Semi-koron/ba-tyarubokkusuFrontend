@@ -110,11 +110,14 @@ export const useARToolkit = ({
   };
 
   const getSourceOrientation = (): string => {
-    return arToolkitSource &&
+    const a =
+      arToolkitSource &&
       arToolkitSource.domElement.videoWidth >
         arToolkitSource.domElement.videoHeight
-      ? "landscape"
-      : "portrait";
+        ? "landscape"
+        : "portrait";
+    console.log("getSourceOrientation", a);
+    return "landscape";
   };
 
   return {
