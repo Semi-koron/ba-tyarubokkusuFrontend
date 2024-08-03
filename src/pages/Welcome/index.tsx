@@ -36,7 +36,7 @@ const Welcome = () => {
 				id={""}
 			/>
 			<img
-				src="/cats/catsTower-circle.png"
+				src="/cats/catsTower-circle.webp"
 				className={styles["main-logo"]}
 				alt="logo"
 				width="84"

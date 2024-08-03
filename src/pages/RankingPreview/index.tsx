@@ -61,7 +61,7 @@ export const RankingPreviewPage = () => {
 			<img
 				className={styles.image}
 				alt="猫たわー"
-				src="cats/catsTower-circle.png"
+				src="cats/catsTower-circle.webp"
 				width={70}
 				height={115}
 			/>
